@@ -28,6 +28,17 @@ namespace DiceGame
 
         public int HumanChooseDie(List<Die> availableDice, int excludeIndex)
         {
+            DisplayAvailableDice(availableDice, excludeIndex);
+
+            int choice = GetValidDieChoice(availableDice.Count, excludeIndex);
+            if (choice == -1) return -1;
+
+            AssignChosenDie(availableDice, choice);
+            return choice;
+        }
+
+        private static void DisplayAvailableDice(List<Die> availableDice, int excludeIndex)
+        {
             Console.WriteLine("Choose your dice:");
             for (int i = 0; i < availableDice.Count; i++)
             {
@@ -35,11 +46,14 @@ namespace DiceGame
                     Console.WriteLine($"{i} - {string.Join(",", availableDice[i].Faces)}");
             }
             Console.WriteLine("X - exit\n? - help");
+        }
 
+        private static int GetValidDieChoice(int diceCount, int excludeIndex)
+        {
             int choice;
             do
             {
-                choice = UserInput.GetUserChoice(availableDice.Count);
+                choice = UserInput.GetUserChoice(diceCount);
                 if (choice == -1) return -1;
                 if (choice == excludeIndex)
                 {
@@ -47,10 +61,15 @@ namespace DiceGame
                 }
             } while (choice == excludeIndex);
 
-            ChosenDie = availableDice[choice];
-            Console.WriteLine($"You chose the [{string.Join(",", ChosenDie.Faces)}] dice.");
             return choice;
         }
+
+        private void AssignChosenDie(List<Die> availableDice, int choice)
+        {
+            ChosenDie = availableDice[choice];
+            Console.WriteLine($"You chose the [{string.Join(",", ChosenDie.Faces)}] dice.");
+        }
+
 
         public int ComputerChooseDie(List<Die> availableDice, int excludeIndex)
         {

@@ -36,14 +36,29 @@ namespace DiceGame
         {
             dice = [];
 
+            if (!ValidateDiceCount(args)) return false;
+
+            List<int[]> parsedDice = [];
+            if (!ParseDiceFaces(args, parsedDice)) return false;
+
+            if (!ValidateFaceCount(parsedDice)) return false;
+
+            dice = parsedDice.Select(faces => new Die(faces)).ToList();
+            return true;
+        }
+
+        private static bool ValidateDiceCount(string[] args)
+        {
             if (args.Length < 3)
             {
                 Console.WriteLine(InvalidDiceCountLength);
                 return false;
             }
+            return true;
+        }
 
-            List<int[]> parsedDice = [];
-
+        private static bool ParseDiceFaces(string[] args, List<int[]> parsedDice)
+        {
             foreach (var arg in args)
             {
                 var faces = arg.Split(',');
@@ -52,18 +67,22 @@ namespace DiceGame
                     Console.WriteLine(InvalidFaceFormat);
                     return false;
                 }
-
                 parsedDice.Add(faces.Select(int.Parse).ToArray());
             }
+            return true;
+        }
+
+        private static bool ValidateFaceCount(List<int[]> parsedDice)
+        {
             int faceCount = parsedDice[0].Length;
             if (parsedDice.Any(d => d.Length != faceCount))
             {
                 Console.WriteLine(InvalidFaceCount);
                 return false;
             }
-            dice = parsedDice.Select(faces => new Die(faces)).ToList();
             return true;
         }
+
     }
 
 }
