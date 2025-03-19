@@ -68,26 +68,26 @@ namespace DiceGame
         {
             if (IsComputer)
             {
-                LastThrow = ComputerChooseNumber();
+                ComputerChooseNumber();
             }
             else
             {
-                LastThrow = PlayerChooseNumber();
+                PlayerChooseNumber();
             }
             return LastThrow ?? 0;
         }
 
-        public int ComputerChooseNumber()
+        public void ComputerChooseNumber()
         {
-            var (_, key, value) = HmacGenerator.GenerateHmac(6);
-            Console.WriteLine($"{Name}'s number is {value} (KEY={key}).");
-            return value;
+            var (_, key, value) = HmacGenerator.GenerateHmac(Die.FaceNumber);
+            Console.WriteLine($"{Name} chose the value (KEY={key}).");
+            LastThrow = value;
         }
 
-        public static int PlayerChooseNumber()
+        public void PlayerChooseNumber()
         {
-            Console.WriteLine("Choose a number modulo 6:");
-            return UserInput.GetUserChoice(6);
+            Console.WriteLine($"Choose a number modulo {Die.FaceNumber}:");
+            LastThrow = UserInput.GetUserChoice(Die.FaceNumber);
         }
     }
 }

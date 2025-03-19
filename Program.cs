@@ -6,13 +6,11 @@ namespace DiceGame
     {
         static void Main(string[] args)
         {
-            if (args.Length < 3)
+            if (!ValidationError.ValidateDiceInput(args, out List<Die> dice))
             {
-                Console.WriteLine(ValidationError.InvalidDiceCountLength);
                 return;
             }
 
-            List<Die> dice = args.Select(arg => new Die(arg.Split(',').Select(int.Parse).ToArray())).ToList();
             new Game(dice).Start();
         }
     }
