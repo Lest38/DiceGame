@@ -1,86 +1,74 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace DiceGame
 {
-    internal class Player(string name, bool isComputer)
+    class Player
     {
-        public string Name { get; } = name;
+        public string Name { get; }
+        public bool IsComputer { get; }
         public Die? ChosenDie { get; private set; }
-        public bool IsComputer { get; } = isComputer;
         public int? LastThrow { get; private set; }
+        private string? currentKey;
+        private string? currentHmac;
 
-        public int ChooseDie(List<Die> availableDice, int excludeIndex = -1)
+        public Player(string name, bool isComputer)
+        {
+            Name = name;
+            IsComputer = isComputer;
+        }
+
+        public int ChooseDie(List<Die> dice, int excludeIndex = -1)
         {
             if (IsComputer)
             {
-                return ComputerChooseDie(availableDice, excludeIndex);
+                return ComputerChooseDie(dice, excludeIndex);
             }
             else
             {
-                return HumanChooseDie(availableDice, excludeIndex);
+                return HumanChooseDie(dice, excludeIndex);
             }
         }
 
-        public int HumanChooseDie(List<Die> availableDice, int excludeIndex)
+        private int ComputerChooseDie(List<Die> dice, int excludeIndex = -1)
         {
-            DisplayAvailableDice(availableDice, excludeIndex);
-
-            int choice = GetValidDieChoice(availableDice.Count, excludeIndex);
-            if (choice == -1) return -1;
-
-            AssignChosenDie(availableDice, choice);
-            return choice;
-        }
-
-        private static void DisplayAvailableDice(List<Die> availableDice, int excludeIndex)
-        {
-            Console.WriteLine("Choose your dice:");
-            for (int i = 0; i < availableDice.Count; i++)
-            {
-                if (i != excludeIndex)
-                    Console.WriteLine($"{i} - {string.Join(",", availableDice[i].Faces)}");
-            }
-            Console.WriteLine("X - exit\n? - help");
-        }
-
-        private static int GetValidDieChoice(int diceCount, int excludeIndex)
-        {
-            int choice;
-            do
-            {
-                choice = UserInput.GetUserChoice(diceCount);
-                if (choice == -1) return -1;
-                if (choice == excludeIndex)
-                {
-                    Console.WriteLine("This die is already taken. Choose another one.");
-                }
-            } while (choice == excludeIndex);
-
-            return choice;
-        }
-
-        private void AssignChosenDie(List<Die> availableDice, int choice)
-        {
-            ChosenDie = availableDice[choice];
-            Console.WriteLine($"You chose the [{string.Join(",", ChosenDie.Faces)}] dice.");
-        }
-
-
-        public int ComputerChooseDie(List<Die> availableDice, int excludeIndex)
-        {
+            Random random = new();
             int index;
             do
             {
-                index = RandomNumberGenerator.GetInt32(availableDice.Count);
+                index = random.Next(dice.Count);
             } while (index == excludeIndex);
-            ChosenDie = availableDice[index];
-            Console.WriteLine($"{Name} chose the [{string.Join(",", ChosenDie.Faces)}] dice.");
-            return 0;
+            ChosenDie = dice[index];
+            Console.WriteLine($"{Name} chose die {string.Join(", ", dice[index].Faces)}.");
+            return index;
+        }
+
+        private int HumanChooseDie(List<Die> dice, int excludeIndex = -1)
+        {
+            Console.WriteLine("Choose your die:");
+            for (int i = 0; i < dice.Count; i++)
+            {
+                if (i != excludeIndex)
+                    Console.WriteLine($"{i + 1} - {string.Join(", ", dice[i].Faces)}");
+            }
+
+            int choice = UserInput.GetUserChoice(dice.Count);
+            if (choice == -1) return -1;
+
+            ChosenDie = dice[choice - 1];
+            return choice - 1;
+        }
+
+        public void PrepareMove()
+        {
+            if (ChosenDie == null) throw new InvalidOperationException("Die not chosen.");
+            (currentHmac, currentKey, LastThrow) = HmacGenerator.GenerateHmac(Die.FaceNumber);
+            ShowHmac();
+        }
+
+        public void ShowHmac()
+        {
+            if (currentHmac != null)
+                Console.WriteLine($"{Name}'s HMAC: {currentHmac}");
         }
 
         public int MakeMove()
@@ -105,8 +93,14 @@ namespace DiceGame
 
         public void PlayerChooseNumber()
         {
-            Console.WriteLine($"Choose a number modulo {Die.FaceNumber}:");
+            Console.Write($"Choose a number modulo {Die.FaceNumber}: ");
             LastThrow = UserInput.GetUserChoice(Die.FaceNumber);
+        }
+
+        public void ShowKey()
+        {
+            if (currentKey != null)
+                Console.WriteLine($"{Name}'s number is {LastThrow} (Key: {currentKey})");
         }
     }
 }

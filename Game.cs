@@ -90,8 +90,9 @@
             {
                 Player first = userMovesFirst ? user : computer;
                 Player second = userMovesFirst ? computer : user;
-                first.MakeMove();
-                second.MakeMove();
+                computer.PrepareMove();
+                user.MakeMove();
+                computer.ShowKey();
                 GetRoundResult(first, second);
             }
             GetFinalResult();
