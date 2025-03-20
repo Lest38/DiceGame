@@ -5,6 +5,7 @@
         private readonly List<Die> dice = dice;
         private readonly Player user = new("User", false);
         private readonly Player computer = new("Computer", true);
+        private readonly List<int> roundResults = [];
 
         public void Start()
         {
@@ -12,7 +13,7 @@
 
             bool userMovesFirst = DetermineFirstMove();
             ChooseDiceForPlayers(userMovesFirst);
-            PlayRounds(userMovesFirst);
+            PlayRounds();
         }
 
         private static bool DetermineFirstMove()
@@ -47,23 +48,25 @@
             }
         }
 
-        public static bool GetDiceFace(Player player, out int result)
+        public bool GetDiceFace(Player player, out int result)
         {
             result = 0;
-            if (player.LastThrow.HasValue && player.ChosenDie != null)
+            int roundIndex = player.IsComputer ? 0 : 1;
+            if (player.ChosenDie != null && roundIndex < roundResults.Count)
             {
-                result = player.ChosenDie.Faces[player.LastThrow.Value];
+                result = player.ChosenDie.Faces[roundResults[roundIndex]];
                 return true;
             }
             return false;
         }
 
-        private static void GetRoundResult(Player first, Player second)
+        private void GetRoundResult(Player first, Player second)
         {
             if (first.LastThrow.HasValue && second.LastThrow.HasValue)
             {
                 int result = (first.LastThrow.Value + second.LastThrow.Value) % 6;
-                Console.WriteLine($"The result is {first.LastThrow.Value} + {second.LastThrow.Value} = {result} (mod 6).");
+                Console.WriteLine($"The final dice face index is {first.LastThrow.Value} + {second.LastThrow.Value} = {result} (mod 6).");
+                roundResults.Add(result);
             }
             else
             {
@@ -84,16 +87,14 @@
                 Console.WriteLine("It's a tie!");
         }
 
-        private void PlayRounds(bool userMovesFirst)
+        private void PlayRounds()
         {
             for (int round = 0; round < 2; round++)
             {
-                Player first = userMovesFirst ? user : computer;
-                Player second = userMovesFirst ? computer : user;
-                computer.PrepareMove();
+                computer.AnnounceTurn(round);
                 user.MakeMove();
                 computer.ShowKey();
-                GetRoundResult(first, second);
+                GetRoundResult(computer, user);
             }
             GetFinalResult();
         }

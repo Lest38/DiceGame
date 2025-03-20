@@ -2,20 +2,14 @@
 
 namespace DiceGame
 {
-    class Player
+    class Player(string name, bool isComputer)
     {
-        public string Name { get; }
-        public bool IsComputer { get; }
+        public string Name { get; } = name;
+        public bool IsComputer { get; } = isComputer;
         public Die? ChosenDie { get; private set; }
         public int? LastThrow { get; private set; }
         private string? currentKey;
         private string? currentHmac;
-
-        public Player(string name, bool isComputer)
-        {
-            Name = name;
-            IsComputer = isComputer;
-        }
 
         public int ChooseDie(List<Die> dice, int excludeIndex = -1)
         {
@@ -51,15 +45,23 @@ namespace DiceGame
                     Console.WriteLine($"{i + 1} - {string.Join(", ", dice[i].Faces)}");
             }
 
-            int choice = UserInput.GetUserChoice(dice.Count);
+            int choice = UserInput.GetUserChoice(dice.Count + 1);
             if (choice == -1) return -1;
 
             ChosenDie = dice[choice - 1];
             return choice - 1;
         }
 
+        public void AnnounceTurn(int round)
+        {
+            string playerName = round == 0 ? "computer's" : "your";
+            Console.WriteLine($"It's {playerName} turn");
+            PrepareMove();
+        }
+
         public void PrepareMove()
         {
+
             if (ChosenDie == null) throw new InvalidOperationException("Die not chosen.");
             (currentHmac, currentKey, LastThrow) = HmacGenerator.GenerateHmac(Die.FaceNumber);
             ShowHmac();
@@ -73,22 +75,8 @@ namespace DiceGame
 
         public int MakeMove()
         {
-            if (IsComputer)
-            {
-                ComputerChooseNumber();
-            }
-            else
-            {
-                PlayerChooseNumber();
-            }
+            PlayerChooseNumber();
             return LastThrow ?? 0;
-        }
-
-        public void ComputerChooseNumber()
-        {
-            var (_, key, value) = HmacGenerator.GenerateHmac(Die.FaceNumber);
-            Console.WriteLine($"{Name} chose the value (KEY={key}).");
-            LastThrow = value;
         }
 
         public void PlayerChooseNumber()
